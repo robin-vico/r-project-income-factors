@@ -1,0 +1,80 @@
+---
+title: "main"
+author: "Robin VICO"
+date: "2025-10-22"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Step 1: Data Cleaning and Preparation
+
+```{r, include=FALSE}
+install.packages('tidyvervse')
+library(tidyverse)
+```
+
+```{r}
+data = read.csv('data/raw/adult.csv')
+data %>%
+  head() %>%
+  print()
+```
+
+```{r}
+print(data)
+```
+
+```{r}
+data %>%
+  dim() %>%
+  print()
+```
+
+```{r}
+data %>%
+  colnames() %>%
+  print()
+```
+
+```{r}
+data %>%
+  str() %>%
+  print()
+```
+
+```{r}
+NA_values = data %>%
+  filter(workclass=='?'| occupation=='?'| native.country=='?') %>%
+  print()
+```
+
+```{r}
+print(dim(NA_values))
+```
+
+```{r}
+
+```
+
+```{r}
+for (col_name in names(data)) {
+  cat("Colonne :", col_name, "\n")
+  print(sort(unique(data[[col_name]])))
+  cat("\n")
+}
+```
+
+cleaning missing values in workclass column :
+
+```{r}
+data %>%
+  count(workclass) %>%
+  arrange(desc(n))
+```
+
+we notice that the majority of the classes is 'private' -\> shall we set to 'private' all missing values ?
+
+We can try to go further by looking at the most common workclass for each sex, country, age,

@@ -1,0 +1,185 @@
+---
+title: "main"
+author: "Robin VICO"
+date: "2025-10-22"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Step 1: Data Cleaning and Preparation
+
+```{r, include=FALSE}
+install.packages('tidyvervse')
+library(tidyverse)
+```
+
+```{r}
+raw_data = read.csv('data/raw/adult.csv')
+raw_data %>%
+  head() %>%
+  print()
+```
+
+```{r}
+print(raw_data)
+```
+
+```{r}
+raw_data %>%
+  dim() %>%
+  print()
+```
+
+```{r}
+raw_data %>%
+  colnames() %>%
+  print()
+```
+
+```{r}
+raw_data %>%
+  str() %>%
+  print()
+```
+
+```{r}
+NA_values = raw_data %>%
+  filter(workclass=='?'| occupation=='?'| native.country=='?') %>%
+  print()
+```
+
+```{r}
+print(dim(NA_values))
+```
+
+```{r}
+for (col_name in names(raw_data)) {
+  cat("Colonne :", col_name, "\n")
+  print(sort(unique(raw_data[[col_name]])))
+  cat("\n")
+}
+```
+
+cleaning missing values in workclass column :
+
+```{r}
+raw_data %>%
+  count(workclass) %>%
+  arrange(desc(n)) %>%
+  mutate(percentage = n*100/32651)
+```
+
+we notice that the majority of the classes is 'private' -\> shall we set to 'private' all missing values ?
+
+We can try to go further by looking at the most common workclass for each sex, country, age, education, education.num
+
+```{r}
+colnames(data)
+```
+
+```{r}
+data %>% 
+  filter(workclass != '?', sex=='Male') %>% 
+  count(workclass) %>%
+  arrange(desc(n)) %>%
+  print()
+```
+
+```{r}
+data %>% 
+  filter(workclass != '?', sex=='Female') %>% 
+  count(workclass) %>%
+  arrange(desc(n)) %>%
+  print()
+```
+
+```{r}
+data %>% 
+  filter(workclass != '?') %>% 
+  group_by(age, sex, education, native.country) %>%
+  count(workclass) %>%
+  arrange(desc(n)) %>%
+  print()
+```
+
+For the moment we will just replace all the missing values by the most common value
+
+```{r}
+most_common_workclasses = raw_data %>%
+  count(workclass) %>%
+  arrange(desc(n)) %>%
+  mutate(percentage = n*100/32651)
+
+most_common_workclass = most_common_workclasses$workclass[1]
+
+cleaned_data = raw_data %>%
+  mutate(workclass = recode(workclass, '?' = most_common_workclass))
+head(cleaned_data)
+```
+
+```{r}
+raw_data %>%
+  count(occupation) %>%
+  arrange(desc(n)) %>%
+  mutate(percentage = n*100/32651)
+```
+
+for the occupation column we see that there are no occupation that dominate the others, replacing all the missing values by the most common one is not really a good idea. For the moment we will simply drop the lines containing missing value for the occupation column.
+
+```{r}
+cleaned_data = cleaned_data %>%
+  filter(occupation != '?')
+```
+
+```{r}
+most_common_native_countries = raw_data %>%
+  count(native.country) %>%
+  arrange(desc(n)) %>%
+  mutate(percentage = n*100/32651)
+
+print(head(most_common_native_countries))
+```
+
+```{r}
+
+most_common_native_country = most_common_native_countries$native.country[1]
+print(most_common_native_country)
+```
+
+for the missing values in the column native.country, we will replace them by the most common attribute, united-states since its the majority of the elements.
+
+```{r}
+cleaned_data = cleaned_data %>%
+  mutate(native.country = recode(native.country, '?' = most_common_native_country))
+head(cleaned_data)
+```
+
+Quick check to see if the difference between raw and cleaned data :
+
+```{r}
+print(raw_data)
+```
+
+```{r}
+print(cleaned_data)
+```
+
+Summary : We replaced '?' values of workclass and native.country by the most common values of both columns and we dropped the lines containing '?' values in the column occupation.
+
+Categorical variables : Some categorical variables may contain leading or trailing whitespace. Clean these columns.x
+
+```{r}
+library(dplyr)
+library(stringr)
+
+cols_with_whitespace <- cleaned_data %>%
+  summarise(across(where(is.character), ~ any(str_detect(., "^\\s|\\s$"))))
+
+cols_with_whitespace
+
+```
+
+as we see there is no column that contain any leading or trailing whitespace.
