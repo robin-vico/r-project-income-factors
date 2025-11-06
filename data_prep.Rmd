@@ -81,7 +81,7 @@ colnames(data)
 ```
 
 ```{r}
-data %>% 
+raw_data %>% 
   filter(workclass != '?', sex=='Male') %>% 
   count(workclass) %>%
   arrange(desc(n)) %>%
@@ -89,7 +89,7 @@ data %>%
 ```
 
 ```{r}
-data %>% 
+raw_data %>% 
   filter(workclass != '?', sex=='Female') %>% 
   count(workclass) %>%
   arrange(desc(n)) %>%
@@ -97,7 +97,7 @@ data %>%
 ```
 
 ```{r}
-data %>% 
+raw_data %>% 
   filter(workclass != '?') %>% 
   group_by(age, sex, education, native.country) %>%
   count(workclass) %>%
@@ -144,7 +144,6 @@ print(head(most_common_native_countries))
 ```
 
 ```{r}
-
 most_common_native_country = most_common_native_countries$native.country[1]
 print(most_common_native_country)
 ```
@@ -183,3 +182,39 @@ cols_with_whitespace
 ```
 
 as we see there is no column that contain any leading or trailing whitespace.
+
+# Step 2: Feature Transformation and Engineering
+
+```{r}
+cleaned_data_grouped = cleaned_data %>%
+  mutate(native.country.grouped = if_else(
+    native.country != most_common_native_country,
+    "Other",
+    native.country))
+
+print(cleaned_data_grouped)
+```
+
+```{r}
+cleaned_data_grouped_and_income_simplified = cleaned_data_grouped %>%
+  mutate(income.simplified = if_else(income == '>50K', 1, 0))
+
+print(cleaned_data_grouped_and_income_simplified)
+```
+
+```{r}
+cleaned_data_country_income_age = cleaned_data_grouped_and_income_simplified %>%
+  mutate(age.group = case_when(
+    age >= 17 & age <= 20 ~ "Young",
+    age >= 21 & age <= 59 ~ "Adult",
+    age > 59 ~ "Senior",
+  ))
+print(cleaned_data_country_income_age)
+```
+
+```{r}
+cleaned_data_country_income_age_capital = cleaned_data_country_income_age %>%
+  mutate(net.capital = capital.gain - capital.loss)
+
+print(cleaned_data_country_income_age_capital)
+```
