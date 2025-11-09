@@ -213,8 +213,41 @@ print(cleaned_data_country_income_age)
 ```
 
 ```{r}
-cleaned_data_country_income_age_capital = cleaned_data_country_income_age %>%
+final_data = cleaned_data_country_income_age %>%
   mutate(net.capital = capital.gain - capital.loss)
 
-print(cleaned_data_country_income_age_capital)
+print(final_data)
+```
+
+# Step 3: Visualization and Exploration
+
+```{r}
+over_50k = final_data %>%
+  filter(income.simplified == TRUE)
+print(over_50k)
+```
+
+```{r}
+ggplot(over_50k) +
+    geom_histogram(aes(x = over_50k$education.num))
+```
+
+```{r}
+a = over_50k %>%
+  count(education.num) %>%
+  arrange(desc(n)) %>%
+  mutate(percentage = n*100/7650)
+print(a)
+```
+
+```{r}
+ggplot(a) +
+    geom_histogram(aes(x = a$percentage))
+```
+
+```{r}
+
+ggplot(over_50k, aes(x = factor(education.num))) +
+  geom_bar(aes(y = after_stat(count / sum(count)))) +
+  scale_y_continuous(labels = scales::percent)
 ```
