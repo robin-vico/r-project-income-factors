@@ -12,8 +12,10 @@ knitr::opts_chunk$set(echo = TRUE)
 # Step 1: Data Cleaning and Preparation
 
 ```{r, include=FALSE}
-install.packages('tidyvervse')
 library(tidyverse)
+library(scales)
+library(ggplot2)
+library(dplyr)
 ```
 
 ```{r}
@@ -168,6 +170,29 @@ print(cleaned_data)
 
 Summary : We replaced '?' values of workclass and native.country by the most common values of both columns and we dropped the lines containing '?' values in the column occupation.
 
+Now, because we have two look-alike variables, education and education.num, let's check if there's any redundancy.
+
+```{r}
+education_check <- cleaned_data %>%
+    select(education, education.num)%>%
+    distinct() %>%
+    arrange(education.num)
+print(education_check)
+```
+
+After verification, we can confidently conclude that there is a perfect correlation and redundancy between the two variables. Therefore, it is not only acceptable but even preferable to exclude the education variable from our subsequent analysis.
+
+Moreover, education is not the only variable that can be considered unnecessary. Based on our research, the fnlwgt (final weight) variable also does not contribute meaningfully to our predictive task. This variable represents the number of people in the surveyed population who share the same profile. Consequently, it does not help our models determine whether an individual is likely to earn more or less than \$50K per year.
+
+```{r}
+cleaned_data <- cleaned_data %>% 
+  select(-fnlwgt, -education)
+```
+
+```{r}
+print(cleaned_data)
+```
+
 Categorical variables : Some categorical variables may contain leading or trailing whitespace. Clean these columns.x
 
 ```{r}
@@ -178,7 +203,6 @@ cols_with_whitespace <- cleaned_data %>%
   summarise(across(where(is.character), ~ any(str_detect(., "^\\s|\\s$"))))
 
 cols_with_whitespace
-
 ```
 
 as we see there is no column that contain any leading or trailing whitespace.
@@ -186,20 +210,18 @@ as we see there is no column that contain any leading or trailing whitespace.
 # Step 2: Feature Transformation and Engineering
 
 ```{r}
-cleaned_data_grouped = cleaned_data %>%
-  mutate(native.country.grouped = if_else(
-    native.country != most_common_native_country,
-    "Other",
-    native.country))
+cleaned_data <- cleaned_data %>%
+  mutate(native.country = ifelse(native.country == "United-States", "USA", "Other"))
+  
 
-print(cleaned_data_grouped)
+print(cleaned_data)
 ```
 
 ```{r}
-cleaned_data_grouped_and_income_simplified = cleaned_data_grouped %>%
-  mutate(income.simplified = if_else(income == '>50K', 1, 0))
+cleaned_data = cleaned_data %>%
+  mutate(income = ifelse(income == '>50K', 1, 0))
 
-print(cleaned_data_grouped_and_income_simplified)
+print(cleaned_data)
 ```
 
 ```{r}
@@ -317,3 +339,58 @@ ggplot(sample_age_distrib, aes(x = age)) +
     fill = "Income class"
   )
 ```
+
+```{r}
+print(final_data)
+write.csv(final_data,"data/processed/clean_v1.csv")
+```
+Now that the data preparation is done as well as the visualisation , we can move on to the modeling but why test the model on only one type of cleaned data ? That's the question we asked ourselves. Let's test other ways to clean the data so you can compare afterhand.
+
+Let's see what are the missing variables
+```{r}
+df=raw_data
+na_summary <- sapply(df, function(x) sum(x == "?" | is.na(x)))
+na_percentage <- na_summary / nrow(df) * 100
+na_df <- data.frame(variable = names(na_percentage), pourcentage_NA = na_percentage)
+print(na_df%>%filter(pourcentage_NA != 0))
+```
+The missing variables are occupation, workclass and native_country
+
+```{r}
+# Préparer les données: convertir en caractère et traiter "?" comme NA
+max_categories=20
+var="native.country"
+  df_tmp <- df
+  df_tmp[[var]][df_tmp[[var]] == "?"] <- NA_character_
+  # df_tmp[[var]][is.na(df_tmp[[var]])] <- NA_character_
+  
+  # Calculer les fréquences par catégorie (incl. "NA") puis garder top catégories
+  counts_raw <- as.data.frame(table(df_tmp[[var]], useNA = "ifany"), stringsAsFactors = FALSE)
+  colnames(counts_raw) <- c("valeur", "frequence")
+  top_categories <- head(counts_raw[order(-counts_raw$frequence), "valeur"], max_categories)
+  
+  # Regrouper les autres catégories en "Autres"
+  df_tmp[[var]] <- ifelse(df_tmp[[var]] %in% top_categories, df_tmp[[var]], "Autres")
+  
+  # Recalculer fréquences et pourcentages
+  counts2 <- as.data.frame(table(df_tmp[[var]]), stringsAsFactors = FALSE)
+  colnames(counts2) <- c("valeur", "frequence")
+  counts2$pourcentage <- counts2$frequence / sum(counts2$frequence) * 100
+  
+  # Ordre des catégories pour le plot (descendant par pourcentage)
+  counts2$valeur <- factor(counts2$valeur, levels = counts2$valeur[order(-counts2$pourcentage)])
+  
+  # Tracer le barplot en pourcentage
+  p <- ggplot(counts2, aes(x = valeur, y = pourcentage, fill = valeur)) +
+      geom_col(show.legend = FALSE) +
+      geom_text(aes(label = paste0(round(pourcentage, 1), "%")), vjust = -0.5, size = 3) +
+      labs(title = paste("Répartition (pourcentage) de", var),
+               x = var,
+               y = "Pourcentage (%)") +
+      theme_minimal() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+      ylim(0, max(counts2$pourcentage) * 1.12)
+  
+  print(p)
+```
+
