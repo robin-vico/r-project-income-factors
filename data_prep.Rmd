@@ -360,6 +360,7 @@ write.csv(final_data,"data/processed/clean_v1.csv")
 ```
 
 
+## IMPORTANT TO ADD TO main.Rmd UNTIL IT IS NOTIFIED Alternative Data Cleaning Approaches - 
 Now that the data preparation is done as well as the visualisation , we can move on to the modeling but why test the model on only one type of cleaned data ? That's the question we asked ourselves. Let's test other ways to clean the data so you can compare afterhand.
 
 Let's see what are the missing variables
@@ -778,3 +779,4 @@ print(df_fully_filled)
 df_fully_filled %>%
   filter(workclass=="?")
 ```
+## END OF THE ADDITIONAL DATA CLEANING APPROACHES TO ADD TO main.Rmd
