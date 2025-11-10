@@ -14,6 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r, include=FALSE}
 install.packages('tidyvervse')
 library(tidyverse)
+library(scales)
 ```
 
 ```{r}
@@ -227,68 +228,38 @@ over_50k = final_data %>%
 print(over_50k)
 ```
 
-```{r}
-ggplot(over_50k) +
-    geom_histogram(aes(x = over_50k$education.num))
-```
-
-```{r}
-a = over_50k %>%
-  count(education.num) %>%
-  arrange(desc(n)) %>%
-  mutate(percentage = n*100/7650)
-print(a)
-```
-
-```{r}
-ggplot(a) +
-    geom_histogram(aes(x = a$percentage))
-```
-
 Income and Education Level : Visualize the proportion of people earning over \$50K for each level of education-num using a bar diagram
 
 ```{r}
-
 ggplot(over_50k, aes(x = factor(education.num))) +
   geom_bar(aes(y = after_stat(count / sum(count)))) +
-  scale_y_continuous(labels = scales::percent)
+  scale_y_continuous(labels = scales::percent) +
+  labs(
+    title = "Proportion of individuals earning > 50K by education level",
+    x = "Education number (education.num)",
+    y = "Proportion of individuals in the > 50K subset"
+  )
 ```
 
 Work Hours and Income: Compare the distribution of hours-per-week between the two income classes.
 
 ```{r}
-sample_0 = final_data %>%
-  filter(income.simplified == FALSE) %>%
-  select(hours.per.week)
-
-print(sample_0)
-
-
-sample_1 = final_data %>%
-  filter(income.simplified == TRUE) %>%
-  select(hours.per.week)
-
-print(sample_1)
+ggplot(final_data, aes(x = hours.per.week, fill = income)) +
+  geom_histogram(bins = 30) + 
+  facet_wrap(~ income, scales = "free_y", ncol = 1) + 
+  labs(
+    title = "Distribution of hours per week, faceted by income class",
+    x = "Hours per week",
+    y = "Frequency (number of individuals)",
+    fill = "Income class"
+  )
 ```
 
-```{r}
-ggplot(sample_0) +
-    geom_histogram(aes(x = hours.per.week))
-
-ggplot(sample_1) +
-    geom_histogram(aes(x = hours.per.week))
-```
-
-Impact of Marital Status: Visualize the relationship between marital-status and income .\
-
-```{r}
-print(final_data)
-```
+Impact of Marital Status: Visualize the relationship between marital-status and income.
 
 ```{r}
 sample_marital_status = final_data %>%
   select(marital.status, income)
-
 
 ggplot(sample_marital_status, aes(x = marital.status, fill = income)) +
   geom_bar(position = "fill") +
@@ -315,5 +286,45 @@ ggplot(sample_age_distrib, aes(x = age)) +
     x = "Age",
     y = "Number of people",
     fill = "Income class"
+  )
+```
+
+```{r}
+ggplot(final_data, aes(x = relationship, fill = income)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(
+    title = "Proportion of income > 50K by family role/relationship",
+    x = "Relationship",
+    y = "Proportion of income category",
+    fill = "Income level"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r}
+ggplot(final_data, aes(x = marital.status, fill = income)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  facet_wrap(~ sex) + 
+  labs(
+    title = "Proportion of income > 50K by marital status and sex",
+    x = "Marital status",
+    y = "Proportion of income category",
+    fill = "Income level"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r}
+# Supposons que votre variable groupée s'appelle 'native.country.grouped'
+ggplot(cleaned_data_grouped, aes(x = native.country.grouped, fill = income)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(
+    title = "Proportion of high income by native country (US vs other)",
+    x = "Native country (grouped)",
+    y = "Proportion of income category",
+    fill = "Income level"
   )
 ```
