@@ -2,7 +2,12 @@
 title: "main"
 author: "Robin VICO"
 date: "2025-10-22"
-output: html_document
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    css: ["style.css"]
 ---
 
 ```{r setup, include=FALSE}
@@ -143,11 +148,15 @@ most_common_native_country = most_common_native_countries$native.country[1]
 print(most_common_native_country)
 ```
 
+<div style="overflow-x: auto;">
+
 ```{r}
 cleaned_data = cleaned_data %>%
   mutate(native.country = recode(native.country, '?' = most_common_native_country))
 kable(head(cleaned_data))
 ```
+
+</div>
 
 Summary : We replaced '?' values of workclass and native.country columns, by the most common values of both columns and we dropped the lines containing '?' values in the occupation column.
 
@@ -170,9 +179,13 @@ cleaned_data <- cleaned_data %>%
   select(-fnlwgt, -education)
 ```
 
+<div style="overflow-x: auto;">
+
 ```{r}
 kable(head(cleaned_data))
 ```
+
+</div>
 
 Categorical variables : Some categorical variables may contain leading or trailing whitespace.
 
@@ -196,6 +209,8 @@ As we see there is no column that contain any leading or trailing whitespace.
 
 Since "United-States" is the most common country and all the other values are negligible, we will just set "Other" to the countries that are not "United-States".
 
+<div style="overflow-x: auto;">
+
 ```{r}
 cleaned_data <- cleaned_data %>%
   mutate(native.country = ifelse(native.country == "United-States", "USA", "Other"))
@@ -204,7 +219,11 @@ cleaned_data <- cleaned_data %>%
 kable(head(cleaned_data))
 ```
 
+</div>
+
 ## Target Transformation
+
+<div style="overflow-x: auto;">
 
 ```{r}
 cleaned_data = cleaned_data %>%
@@ -213,7 +232,11 @@ cleaned_data = cleaned_data %>%
 kable(head(cleaned_data))
 ```
 
+</div>
+
 ## Age Discretization
+
+<div style="overflow-x: auto;">
 
 ```{r}
 cleaned_data = cleaned_data %>%
@@ -225,7 +248,11 @@ cleaned_data = cleaned_data %>%
 kable(head(cleaned_data))
 ```
 
+</div>
+
 ## Analyzing Capital Gains/Losses
+
+<div style="overflow-x: auto;">
 
 ```{r}
 final_data = cleaned_data %>%
@@ -235,15 +262,21 @@ final_data = cleaned_data %>%
 kable(head(final_data))
 ```
 
+</div>
+
 # Step 3: Visualization and Exploration
 
 ## Income and Education Level
+
+<div style="overflow-x: auto;">
 
 ```{r}
 over_50k = final_data %>%
   filter(income == TRUE)
 kable(head(over_50k))
 ```
+
+</div>
 
 ```{r}
 ggplot(over_50k, aes(x = factor(education.num))) +
@@ -349,10 +382,14 @@ ggplot(data, aes(x = native.country, fill = income)) +
   )
 ```
 
+<div style="overflow-x: auto;">
+
 ```{r}
 kable(head(final_data))
 write.csv(final_data,"data/processed/clean_v1.csv")
 ```
+
+</div>
 
 Now that the data preparation is done as well as the visualisation, we can move on to the modeling but why test the model on only one type of cleaned data ? That's the question we asked ourselves. Let's test other ways to clean the data so you can compare afterhand.
 
@@ -412,7 +449,8 @@ var="native.country"
 
 ```{r, include=FALSE}
 data_for_model <- read.csv('data/processed/clean_v1.csv') %>% 
-  mutate(income = factor(income, labels = c("L50K", "G50K"))) 
+  mutate(income = factor(income, labels = c("L50K", "G50K"))) %>%
+  select(-X)
 
 categorical_vars <- names(data_for_model)[
   (sapply(data_for_model, is.factor) | sapply(data_for_model, is.character)) & 
@@ -427,7 +465,7 @@ formula_vars <- paste(categorical_vars, collapse = " + ")
 
 dummies <- dummyVars(paste("~", formula_vars), data = data_for_model)
 
-encoded_data <- data.frame(predict(dummies, newdata = data_for_model))
+encoded_data <- as.data.frame(predict(dummies, newdata = data_for_model))
 
 final_data_encoded <- bind_cols(
   data_for_model %>% select_if(is.numeric),
