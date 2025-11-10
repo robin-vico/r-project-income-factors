@@ -245,9 +245,75 @@ ggplot(a) +
     geom_histogram(aes(x = a$percentage))
 ```
 
+Income and Education Level : Visualize the proportion of people earning over \$50K for each level of education-num using a bar diagram
+
 ```{r}
 
 ggplot(over_50k, aes(x = factor(education.num))) +
   geom_bar(aes(y = after_stat(count / sum(count)))) +
   scale_y_continuous(labels = scales::percent)
+```
+
+Work Hours and Income: Compare the distribution of hours-per-week between the two income classes.
+
+```{r}
+sample_0 = final_data %>%
+  filter(income.simplified == FALSE) %>%
+  select(hours.per.week)
+
+print(sample_0)
+
+
+sample_1 = final_data %>%
+  filter(income.simplified == TRUE) %>%
+  select(hours.per.week)
+
+print(sample_1)
+```
+
+```{r}
+ggplot(sample_0) +
+    geom_histogram(aes(x = hours.per.week))
+
+ggplot(sample_1) +
+    geom_histogram(aes(x = hours.per.week))
+```
+
+Impact of Marital Status: Visualize the relationship between marital-status and income .\
+
+```{r}
+print(final_data)
+```
+
+```{r}
+sample_marital_status = final_data %>%
+  select(marital.status, income)
+
+
+ggplot(sample_marital_status, aes(x = marital.status, fill = income)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = percent) +
+  labs(
+    title = "Impact of marital status on income",
+    x = "Marital status",
+    y = "Distribution of income class",
+    fill = "Income class"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+```{r}
+sample_age_distrib = final_data %>%
+  select(age, income)
+
+ggplot(sample_age_distrib, aes(x = age)) +
+  geom_histogram(aes(fill = income), position = "identity") + 
+  facet_wrap(~ income, scales = "free_y") + 
+  labs(
+    title = "Age distribution faceted by the income class",
+    x = "Age",
+    y = "Number of people",
+    fill = "Income class"
+  )
 ```
