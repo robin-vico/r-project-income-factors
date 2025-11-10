@@ -6,75 +6,536 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 ```
 
 # Step 1: Data Cleaning and Preparation
 
 ```{r, include=FALSE}
-install.packages('tidyvervse')
 library(tidyverse)
+library(scales)
+library(ggplot2)
+library(dplyr)
+library(knitr)
+library(caret)
+library(pROC)
 ```
 
-```{r}
-data = read.csv('data/raw/adult.csv')
-data %>%
-  head() %>%
-  print()
+```{r, include=FALSE}
+raw_data = read.csv('data/raw/adult.csv')
+kable(head(raw_data))
 ```
 
-```{r}
-print(data)
-```
-
-```{r}
-data %>%
+```{r, include=FALSE}
+raw_data %>%
   dim() %>%
   print()
 ```
 
-```{r}
-data %>%
+```{r, include=FALSE}
+raw_data %>%
   colnames() %>%
   print()
 ```
 
-```{r}
-data %>%
+```{r, include=FALSE}
+raw_data %>%
   str() %>%
   print()
 ```
 
-```{r}
-NA_values = data %>%
-  filter(workclass=='?'| occupation=='?'| native.country=='?') %>%
-  print()
-```
+As we can see, there are some missing values in the dataset, set as '?'.
 
 ```{r}
+NA_values = raw_data %>%
+  filter(workclass=='?'| occupation=='?'| native.country=='?') %>%
+  head() %>%
+  kable()
+```
+
+```{r, include=FALSE}
 print(dim(NA_values))
 ```
 
-```{r}
-
-```
-
-```{r}
-for (col_name in names(data)) {
+```{r, include=FALSE}
+for (col_name in names(raw_data)) {
   cat("Colonne :", col_name, "\n")
-  print(sort(unique(data[[col_name]])))
+  print(sort(unique(raw_data[[col_name]])))
   cat("\n")
 }
 ```
 
-cleaning missing values in workclass column :
+First, we will clean the missing values of the workclass column.
 
 ```{r}
-data %>%
+raw_data %>%
   count(workclass) %>%
-  arrange(desc(n))
+  arrange(desc(n)) %>%
+  mutate(percentage = n*100/32651) %>%
+  kable()
 ```
 
-we notice that the majority of the classes is 'private' -\> shall we set to 'private' all missing values ?
+We notice that the value 'private' is the most predominant.
 
-We can try to go further by looking at the most common workclass for each sex, country, age,
+To predict the real values of the missing values, we can try to go further by looking at the most common workclass for each sex.
+
+```{r}
+raw_data %>% 
+  filter(workclass != '?', sex=='Male') %>% 
+  count(workclass) %>%
+  arrange(desc(n)) %>%
+  kable()
+```
+
+```{r}
+raw_data %>% 
+  filter(workclass != '?', sex=='Female') %>% 
+  count(workclass) %>%
+  arrange(desc(n)) %>%
+  kable()
+```
+
+Since it does not seem to have any pattern to determine what are the real values of the missing values, and because the 'Private' value is predominant (69% of the values), we will just replace all the missing values by the most common value.
+
+```{r, include=FALSE}
+most_common_workclasses = raw_data %>%
+  count(workclass) %>%
+  arrange(desc(n)) %>%
+  mutate(percentage = n*100/32651)
+
+most_common_workclass = most_common_workclasses$workclass[1]
+
+cleaned_data = raw_data %>%
+  mutate(workclass = recode(workclass, '?' = most_common_workclass))
+head(cleaned_data)
+```
+
+```{r}
+raw_data %>%
+  count(occupation) %>%
+  arrange(desc(n)) %>%
+  mutate(percentage = n*100/32651) %>%
+  kable()
+```
+
+Regarding the occupation column, we see that there are no occupation that dominate the others. That means that we cannot predict what are the values. So, replacing all the missing values by the most common one is the best idea.
+
+We will simply drop the lines containing missing values for the occupation column.
+
+```{r}
+cleaned_data = cleaned_data %>%
+  filter(occupation != '?')
+```
+
+For the missing values in the native.country column, we will replace them by the most common attribute, "United-States" since it is the majority of the elements.
+
+```{r}
+most_common_native_countries = raw_data %>%
+  count(native.country) %>%
+  arrange(desc(n)) %>%
+  mutate(percentage = n*100/32651)
+
+kable(head(most_common_native_countries))
+```
+
+```{r, include=FALSE}
+most_common_native_country = most_common_native_countries$native.country[1]
+print(most_common_native_country)
+```
+
+```{r}
+cleaned_data = cleaned_data %>%
+  mutate(native.country = recode(native.country, '?' = most_common_native_country))
+kable(head(cleaned_data))
+```
+
+Summary : We replaced '?' values of workclass and native.country columns, by the most common values of both columns and we dropped the lines containing '?' values in the occupation column.
+
+Now, because we have two look-alike variables, education and education.num, let's check if there's any redundancy.
+
+```{r}
+education_check <- cleaned_data %>%
+    select(education, education.num)%>%
+    distinct() %>%
+    arrange(education.num)
+kable(education_check)
+```
+
+After verification, we can confidently conclude that there is a perfect correlation and redundancy between the two variables. Therefore, it is not only acceptable but even preferable to exclude the education variable from our subsequent analysis.
+
+Moreover, education is not the only variable that can be considered unnecessary. Based on our research, the fnlwgt (final weight) variable also does not contribute meaningfully to our predictive task. This variable represents the number of people in the surveyed population who share the same profile. Consequently, it does not help our models determine whether an individual is likely to earn more or less than \$50K per year.
+
+```{r}
+cleaned_data <- cleaned_data %>% 
+  select(-fnlwgt, -education)
+```
+
+```{r}
+kable(head(cleaned_data))
+```
+
+Categorical variables : Some categorical variables may contain leading or trailing whitespace.
+
+As we see there is no column that contain any leading or trailing whitespace.
+
+```{r}
+library(dplyr)
+library(stringr)
+
+cols_with_whitespace <- cleaned_data %>%
+  summarise(across(where(is.character), ~ any(str_detect(., "^\\s|\\s$"))))
+
+kable(cols_with_whitespace)
+```
+
+As we see there is no column that contain any leading or trailing whitespace.
+
+# Step 2: Feature Transformation and Engineering
+
+## Grouping categories
+
+Since "United-States" is the most common country and all the other values are negligible, we will just set "Other" to the countries that are not "United-States".
+
+```{r}
+cleaned_data <- cleaned_data %>%
+  mutate(native.country = ifelse(native.country == "United-States", "USA", "Other"))
+  
+
+kable(head(cleaned_data))
+```
+
+## Target Transformation
+
+```{r}
+cleaned_data = cleaned_data %>%
+  mutate(income = ifelse(income == '>50K', 1, 0))
+
+kable(head(cleaned_data))
+```
+
+## Age Discretization
+
+```{r}
+cleaned_data = cleaned_data %>%
+  mutate(age.group = case_when(
+    age >= 17 & age <= 20 ~ "Young",
+    age >= 21 & age <= 59 ~ "Adult",
+    age > 59 ~ "Senior",
+  ))
+kable(head(cleaned_data))
+```
+
+## Analyzing Capital Gains/Losses
+
+```{r}
+final_data = cleaned_data %>%
+  mutate(net.capital = capital.gain - capital.loss) %>%
+  select(-capital.gain, -capital.loss)
+
+kable(head(final_data))
+```
+
+# Step 3: Visualization and Exploration
+
+## Income and Education Level
+
+```{r}
+over_50k = final_data %>%
+  filter(income == TRUE)
+kable(head(over_50k))
+```
+
+```{r}
+ggplot(over_50k, aes(x = factor(education.num))) +
+  geom_bar(aes(y = after_stat(count / sum(count)))) +
+  scale_y_continuous(labels = scales::percent) +
+  labs(
+    title = "Proportion of individuals earning > 50K by education level",
+    x = "Education number (education.num)",
+    y = "Proportion of individuals in the > 50K subset"
+  )
+```
+
+## Work Hours and Income
+
+```{r}
+data = final_data %>%
+  mutate(income = factor(income, labels = c("<=50K", ">50K")))
+
+ggplot(data, aes(x = hours.per.week, fill = income)) +
+  geom_histogram(bins = 30) + 
+  facet_wrap(~ income, scales = "free_y", ncol = 1) + 
+  labs(
+    title = "Distribution of hours per week, faceted by income class",
+    x = "Hours per week",
+    y = "Frequency (number of individuals)",
+    fill = "Income class"
+  )
+```
+
+## Impact of Marital Status
+
+```{r}
+sample_marital_status = data %>%
+  select(marital.status, income)
+
+ggplot(sample_marital_status, aes(x = marital.status, fill = income)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = percent) +
+  labs(
+    title = "Impact of marital status on income",
+    x = "Marital status",
+    y = "Distribution of income class",
+    fill = "Income class"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+## Age distribution
+
+```{r}
+sample_age_distrib = data %>%
+  select(age, income)
+
+ggplot(sample_age_distrib, aes(x = age)) +
+  geom_histogram(bins = 30, aes(fill = income), position = "identity") + 
+  facet_wrap(~ income, scales = "free_y") + 
+  labs(
+    title = "Age distribution faceted by the income class",
+    x = "Age",
+    y = "Number of people",
+    fill = "Income class"
+  )
+```
+
+```{r}
+ggplot(data, aes(x = relationship, fill = income)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(
+    title = "Proportion of income > 50K by family role/relationship",
+    x = "Relationship",
+    y = "Proportion of income category",
+    fill = "Income level"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r}
+ggplot(data, aes(x = marital.status, fill = income)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  facet_wrap(~ sex) + 
+  labs(
+    title = "Proportion of income > 50K by marital status and sex",
+    x = "Marital status",
+    y = "Proportion of income category",
+    fill = "Income level"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r}
+# Supposons que votre variable groupée s'appelle 'native.country.grouped'
+ggplot(data, aes(x = native.country, fill = income)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(
+    title = "Proportion of high income by native country (US vs other)",
+    x = "Native country (grouped)",
+    y = "Proportion of income category",
+    fill = "Income level"
+  )
+```
+
+```{r}
+kable(head(final_data))
+write.csv(final_data,"data/processed/clean_v1.csv")
+```
+
+Now that the data preparation is done as well as the visualisation, we can move on to the modeling but why test the model on only one type of cleaned data ? That's the question we asked ourselves. Let's test other ways to clean the data so you can compare afterhand.
+
+Let's see what are the missing variables
+
+```{r}
+df=raw_data
+na_summary <- sapply(df, function(x) sum(x == "?" | is.na(x)))
+na_percentage <- na_summary / nrow(df) * 100
+na_df <- data.frame(variable = names(na_percentage), pourcentage_NA = na_percentage)
+kable(na_df%>%filter(pourcentage_NA != 0))
+```
+
+The missing variables are occupation, workclass and native_country
+
+```{r}
+# Préparer les données: convertir en caractère et traiter "?" comme NA
+max_categories=20
+var="native.country"
+  df_tmp <- df
+  df_tmp[[var]][df_tmp[[var]] == "?"] <- NA_character_
+  # df_tmp[[var]][is.na(df_tmp[[var]])] <- NA_character_
+  
+  # Calculer les fréquences par catégorie (incl. "NA") puis garder top catégories
+  counts_raw <- as.data.frame(table(df_tmp[[var]], useNA = "ifany"), stringsAsFactors = FALSE)
+  colnames(counts_raw) <- c("valeur", "frequence")
+  top_categories <- head(counts_raw[order(-counts_raw$frequence), "valeur"], max_categories)
+  
+  # Regrouper les autres catégories en "Autres"
+  df_tmp[[var]] <- ifelse(df_tmp[[var]] %in% top_categories, df_tmp[[var]], "Autres")
+  
+  # Recalculer fréquences et pourcentages
+  counts2 <- as.data.frame(table(df_tmp[[var]]), stringsAsFactors = FALSE)
+  colnames(counts2) <- c("valeur", "frequence")
+  counts2$pourcentage <- counts2$frequence / sum(counts2$frequence) * 100
+  
+  # Ordre des catégories pour le plot (descendant par pourcentage)
+  counts2$valeur <- factor(counts2$valeur, levels = counts2$valeur[order(-counts2$pourcentage)])
+  
+  # Tracer le barplot en pourcentage
+  p <- ggplot(counts2, aes(x = valeur, y = pourcentage, fill = valeur)) +
+      geom_col(show.legend = FALSE) +
+      geom_text(aes(label = paste0(round(pourcentage, 1), "%")), vjust = -0.5, size = 3) +
+      labs(title = paste("Répartition (pourcentage) de", var),
+               x = var,
+               y = "Pourcentage (%)") +
+      theme_minimal() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+      ylim(0, max(counts2$pourcentage) * 1.12)
+  
+  print(p)
+```
+
+# Step 4: Modeling and Prediction (Data Science)
+
+## Preparing Data for Modeling
+
+```{r, include=FALSE}
+data_for_model <- read.csv('data/processed/clean_v1.csv') %>% 
+  mutate(income = factor(income, labels = c("L50K", "G50K"))) 
+
+categorical_vars <- names(data_for_model)[
+  (sapply(data_for_model, is.factor) | sapply(data_for_model, is.character)) & 
+  names(data_for_model) != "income"
+]
+
+if (length(categorical_vars) == 0) {
+  stop("Errorr: No categorical variable was found.")
+}
+
+formula_vars <- paste(categorical_vars, collapse = " + ")
+
+dummies <- dummyVars(paste("~", formula_vars), data = data_for_model)
+
+encoded_data <- data.frame(predict(dummies, newdata = data_for_model))
+
+final_data_encoded <- bind_cols(
+  data_for_model %>% select_if(is.numeric),
+  encoded_data,
+  income = data_for_model$income
+)
+
+set.seed(42)
+train_index <- createDataPartition(final_data_encoded$income, p = 0.7, list = FALSE)
+
+training_set <- final_data_encoded[train_index, ]
+testing_set <- final_data_encoded[-train_index, ]
+```
+
+## Training of the models
+
+### Logistic Regression
+
+```{r, eval = FALSE}
+logistic_model <- glm(income ~ ., 
+                      data = training_set, 
+                      family = "binomial")
+
+print("Logistic regression model training success.")
+
+dir.create("models", showWarnings = FALSE)
+saveRDS(logistic_model, file = "models/logistic_model.rds")
+```
+
+```{r}
+logistic_model_loaded = readRDS("models/logistic_model.rds")
+```
+
+### Random Forest
+
+```{r, eval=FALSE}
+library(randomForest)
+
+fit_control <- trainControl(method = "cv", # Validation croisée
+                            number = 5,   # 5 plis
+                            classProbs = TRUE, # Nécessaire pour l'AUC
+                            summaryFunction = twoClassSummary,
+                            verboseIter = TRUE)
+
+rf_model <- train(income ~ ., 
+                  data = training_set, 
+                  method = "rf", 
+                  trControl = fit_control,
+                  metric = "ROC") # Optimiser sur l'AUC (ROC)
+
+dir.create("models", showWarnings = FALSE)
+saveRDS(rf_model, file = "models/rf_model.rds")
+```
+
+```{r}
+rf_model_loaded = readRDS(file = "models/rf_model.rds")
+```
+
+## Evaluation and Interpretation
+
+```{r}
+lr_predictions <- predict(logistic_model_loaded, testing_set, type = "response")
+lr_predicted_class <- factor(ifelse(lr_predictions > 0.5, "G50K", "L50K"), levels = c("L50K", "G50K"))
+
+
+rf_predictions <- predict(rf_model_loaded, testing_set)
+
+
+rf_probs <- predict(rf_model_loaded, testing_set, type = "prob")
+```
+
+### Confusion Matrix and AUC Score
+
+```{r}
+lr_predictions <- predict(logistic_model_loaded, testing_set, type = "response")
+
+lr_predicted_class <- factor(ifelse(lr_predictions > 0.5, "G50K", "L50K"), 
+                             levels = c("L50K", "G50K"))
+lr_conf_matrix <- confusionMatrix(lr_predicted_class, testing_set$income)
+
+print(lr_conf_matrix)
+
+lr_conf_matrix <- confusionMatrix(lr_predicted_class, testing_set$income)
+lr_auc <- roc(testing_set$income, lr_predictions, levels = c("L50K", "G50K"))
+
+print("--- Logistic regression evaluation ---")
+print(lr_conf_matrix)
+cat("AUC Score:", lr_auc$auc, "\n\n")
+
+
+rf_conf_matrix <- confusionMatrix(rf_predictions, testing_set$income)
+rf_auc <- roc(testing_set$income, rf_probs$G50K, levels = c("L50K", "G50K"))
+
+print("--- Random Forest evaluation ---")
+print(rf_conf_matrix)
+cat("AUC Score:", rf_auc$auc, "\n\n")
+```
+
+### Feature importance
+
+```{r}
+rf_importance <- varImp(rf_model_loaded, scale = FALSE)
+
+top_5_features <- head(
+  rf_importance$importance[order(-rf_importance$importance$Overall), , drop = FALSE], 
+  5
+)
+
+print("--- Top 5 most important variables (Random Forest) ---")
+print(top_5_features)
+```

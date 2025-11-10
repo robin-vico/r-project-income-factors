@@ -14,9 +14,9 @@ knitr::opts_chunk$set(echo = TRUE)
 Preparing Data for Modeling: Convert all remaining categorical variables into "dummy" variables (one-hot encoding) so they can be used by the models.
 
 ```{r}
+library(dplyr)
 library(caret)
-data_for_model <- final_data %>% 
-  select(-fnlwgt, -education) %>%
+data_for_model <- read.csv('data/processed/clean_v1.csv') %>% 
   mutate(income = factor(income, labels = c("L50K", "G50K"))) 
 
 categorical_vars <- names(data_for_model)[
@@ -25,7 +25,7 @@ categorical_vars <- names(data_for_model)[
 ]
 
 if (length(categorical_vars) == 0) {
-  stop("Erreur: Aucune variable catégorielle (factor ou character) n'a été trouvée pour l'encodage à chaud.")
+  stop("Errorr: No categorical variable was found.")
 }
 
 formula_vars <- paste(categorical_vars, collapse = " + ")
@@ -47,17 +47,24 @@ training_set <- final_data_encoded[train_index, ]
 testing_set <- final_data_encoded[-train_index, ]
 ```
 
-training if the models :
+Training the models :
 
-```{r}
+```{r, eval = FALSE}
 logistic_model <- glm(income ~ ., 
                       data = training_set, 
                       family = "binomial")
 
 print("Logistic regression model training success.")
+
+dir.create("models", showWarnings = FALSE)
+saveRDS(logistic_model, file = "models/logistic_model.rds")
 ```
 
 ```{r}
+logistic_model_loaded = readRDS("models/logistic_model.rds")
+```
+
+```{r, eval=FALSE}
 library(randomForest)
 
 fit_control <- trainControl(method = "cv", # Validation croisée
@@ -72,29 +79,31 @@ rf_model <- train(income ~ .,
                   trControl = fit_control,
                   metric = "ROC") # Optimiser sur l'AUC (ROC)
 
-print("Random forest model training success.")
+dir.create("models", showWarnings = FALSE)
+saveRDS(rf_model, file = "models/rf_model.rds")
+```
+
+```{r}
+rf_model_loaded = readRDS(file = "models/rf_model.rds")
 ```
 
 predictions :
 
 ```{r}
-# ----------------- Prédictions -----------------
-
-# Régression Logistique : Classe prédite
-lr_predictions <- predict(logistic_model, testing_set, type = "response")
+lr_predictions <- predict(logistic_model_loaded, testing_set, type = "response")
 lr_predicted_class <- factor(ifelse(lr_predictions > 0.5, "G50K", "L50K"), levels = c("L50K", "G50K"))
 
-# Forêt Aléatoire : Classe prédite
-rf_predictions <- predict(rf_model, testing_set)
 
-# Forêt Aléatoire : Probabilités (nécessaires pour l'AUC)
-rf_probs <- predict(rf_model, testing_set, type = "prob")
+rf_predictions <- predict(rf_model_loaded, testing_set)
+
+
+rf_probs <- predict(rf_model_loaded, testing_set, type = "prob")
 ```
 
 ```{r}
 library(pROC)
 
-lr_predictions <- predict(logistic_model, testing_set, type = "response")
+lr_predictions <- predict(logistic_model_loaded, testing_set, type = "response")
 
 lr_predicted_class <- factor(ifelse(lr_predictions > 0.5, "G50K", "L50K"), 
                              levels = c("L50K", "G50K"))
@@ -105,7 +114,7 @@ print(lr_conf_matrix)
 lr_conf_matrix <- confusionMatrix(lr_predicted_class, testing_set$income)
 lr_auc <- roc(testing_set$income, lr_predictions, levels = c("L50K", "G50K"))
 
-print("--- Évaluation Régression Logistique ---")
+print("--- Logistic regression evaluation ---")
 print(lr_conf_matrix)
 cat("AUC Score:", lr_auc$auc, "\n\n")
 
@@ -113,23 +122,19 @@ cat("AUC Score:", lr_auc$auc, "\n\n")
 rf_conf_matrix <- confusionMatrix(rf_predictions, testing_set$income)
 rf_auc <- roc(testing_set$income, rf_probs$G50K, levels = c("L50K", "G50K"))
 
-print("--- Évaluation Forêt Aléatoire ---")
+print("--- Random Forest evaluation ---")
 print(rf_conf_matrix)
 cat("AUC Score:", rf_auc$auc, "\n\n")
 ```
 
 ```{r}
-# ----------------- Importance des Variables (Forêt Aléatoire) -----------------
+rf_importance <- varImp(rf_model_loaded, scale = FALSE)
 
-# Calculer l'importance des variables
-rf_importance <- varImp(rf_model, scale = FALSE)
-
-# Extraire les 5 premières variables les plus importantes
 top_5_features <- head(
   rf_importance$importance[order(-rf_importance$importance$Overall), , drop = FALSE], 
   5
 )
 
-print("--- Top 5 des Facteurs Prédictifs (Forêt Aléatoire) ---")
+print("--- Top 5 most important variables (Random Forest) ---")
 print(top_5_features)
 ```
