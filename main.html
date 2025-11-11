@@ -3430,103 +3430,425 @@ knitting</h3>
 <h2>Evaluation and Interpretation</h2>
 <div id="confusion-matrix-and-auc-score" class="section level3">
 <h3>Confusion Matrix and AUC Score</h3>
-<pre><code>## Confusion Matrix and Statistics
-## 
-##           Reference
-## Prediction L50K G50K
-##       L50K 6441  943
-##       G50K  479 1352
-##                                          
-##                Accuracy : 0.8457         
-##                  95% CI : (0.8381, 0.853)
-##     No Information Rate : 0.7509         
-##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16      
-##                                          
-##                   Kappa : 0.5576         
-##                                          
-##  Mcnemar&#39;s Test P-Value : &lt; 2.2e-16      
-##                                          
-##             Sensitivity : 0.9308         
-##             Specificity : 0.5891         
-##          Pos Pred Value : 0.8723         
-##          Neg Pred Value : 0.7384         
-##              Prevalence : 0.7509         
-##          Detection Rate : 0.6990         
-##    Detection Prevalence : 0.8013         
-##       Balanced Accuracy : 0.7599         
-##                                          
-##        &#39;Positive&#39; Class : L50K           
-## </code></pre>
-<pre><code>## Setting direction: controls &lt; cases</code></pre>
-<pre><code>## [1] &quot;--- Logistic regression evaluation ---&quot;</code></pre>
-<pre><code>## Confusion Matrix and Statistics
-## 
-##           Reference
-## Prediction L50K G50K
-##       L50K 6441  943
-##       G50K  479 1352
-##                                          
-##                Accuracy : 0.8457         
-##                  95% CI : (0.8381, 0.853)
-##     No Information Rate : 0.7509         
-##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16      
-##                                          
-##                   Kappa : 0.5576         
-##                                          
-##  Mcnemar&#39;s Test P-Value : &lt; 2.2e-16      
-##                                          
-##             Sensitivity : 0.9308         
-##             Specificity : 0.5891         
-##          Pos Pred Value : 0.8723         
-##          Neg Pred Value : 0.7384         
-##              Prevalence : 0.7509         
-##          Detection Rate : 0.6990         
-##    Detection Prevalence : 0.8013         
-##       Balanced Accuracy : 0.7599         
-##                                          
-##        &#39;Positive&#39; Class : L50K           
-## </code></pre>
-<pre><code>## AUC Score: 0.9018938</code></pre>
-<pre><code>## Setting direction: controls &lt; cases</code></pre>
-<pre><code>## [1] &quot;--- Random Forest evaluation ---&quot;</code></pre>
-<pre><code>## Confusion Matrix and Statistics
-## 
-##           Reference
-## Prediction L50K G50K
-##       L50K 6384  833
-##       G50K  536 1462
-##                                          
-##                Accuracy : 0.8514         
-##                  95% CI : (0.844, 0.8586)
-##     No Information Rate : 0.7509         
-##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16      
-##                                          
-##                   Kappa : 0.5849         
-##                                          
-##  Mcnemar&#39;s Test P-Value : 1.244e-15      
-##                                          
-##             Sensitivity : 0.9225         
-##             Specificity : 0.6370         
-##          Pos Pred Value : 0.8846         
-##          Neg Pred Value : 0.7317         
-##              Prevalence : 0.7509         
-##          Detection Rate : 0.6928         
-##    Detection Prevalence : 0.7832         
-##       Balanced Accuracy : 0.7798         
-##                                          
-##        &#39;Positive&#39; Class : L50K           
-## </code></pre>
-<pre><code>## AUC Score: 0.8973269</code></pre>
+<div id="logistic-regression-results" class="section level4">
+<h4>Logistic Regression Results</h4>
+<table>
+<caption>Logistic Regression Performance Metrics</caption>
+<thead>
+<tr class="header">
+<th align="left">Metric</th>
+<th align="left">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Accuracy</td>
+<td align="left">84.57%</td>
+</tr>
+<tr class="even">
+<td align="left">Sensitivity</td>
+<td align="left">93.08%</td>
+</tr>
+<tr class="odd">
+<td align="left">Specificity</td>
+<td align="left">58.91%</td>
+</tr>
+<tr class="even">
+<td align="left">AUC</td>
+<td align="left">0.9019</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Confusion Matrix:</strong></p>
+<table>
+<caption>Logistic Regression - Confusion Matrix</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">L50K</th>
+<th align="right">G50K</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">L50K</td>
+<td align="right">6441</td>
+<td align="right">943</td>
+</tr>
+<tr class="even">
+<td align="left">G50K</td>
+<td align="right">479</td>
+<td align="right">1352</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="random-forest-results" class="section level4">
+<h4>Random Forest Results</h4>
+<table>
+<caption>Random Forest Performance Metrics</caption>
+<thead>
+<tr class="header">
+<th align="left">Metric</th>
+<th align="left">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Accuracy</td>
+<td align="left">85.14%</td>
+</tr>
+<tr class="even">
+<td align="left">Sensitivity</td>
+<td align="left">92.25%</td>
+</tr>
+<tr class="odd">
+<td align="left">Specificity</td>
+<td align="left">63.7%</td>
+</tr>
+<tr class="even">
+<td align="left">AUC</td>
+<td align="left">0.8973</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Confusion Matrix:</strong></p>
+<table>
+<caption>Random Forest - Confusion Matrix</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">L50K</th>
+<th align="right">G50K</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">L50K</td>
+<td align="right">6384</td>
+<td align="right">833</td>
+</tr>
+<tr class="even">
+<td align="left">G50K</td>
+<td align="right">536</td>
+<td align="right">1462</td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 <div id="feature-importance" class="section level3">
-<h3>Feature importance</h3>
-<pre><code>## [1] &quot;--- Top 5 most important variables (Random Forest) ---&quot;</code></pre>
-<pre><code>##                                      Overall
-## net.capital                        1241.4083
-## age                                1177.7543
-## education.num                      1035.5832
-## `marital.statusMarried-civ-spouse` 1001.5466
-## hours.per.week                      704.6207</code></pre>
+<h3>Feature Importance</h3>
+<table>
+<caption>Top 5 Most Important Variables (Random Forest)</caption>
+<thead>
+<tr class="header">
+<th align="left">Feature</th>
+<th align="right">Importance Score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">net.capital</td>
+<td align="right">1241.41</td>
+</tr>
+<tr class="even">
+<td align="left">age</td>
+<td align="right">1177.75</td>
+</tr>
+<tr class="odd">
+<td align="left">education.num</td>
+<td align="right">1035.58</td>
+</tr>
+<tr class="even">
+<td align="left"><code>marital.statusMarried-civ-spouse</code></td>
+<td align="right">1001.55</td>
+</tr>
+<tr class="odd">
+<td align="left">hours.per.week</td>
+<td align="right">704.62</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="step-5-modeling-with-alternative-data-cleaning-v2" class="section level1">
+<h1>Step 5: Modeling with Alternative Data Cleaning (v2)</h1>
+<p>Now let’s train and evaluate the same models using the alternative
+data cleaning approach (clean_v2.csv) where we used profiling to fill
+missing values more intelligently.</p>
+<div id="preparing-data-for-modeling-v2" class="section level2">
+<h2>Preparing Data for Modeling (v2)</h2>
+</div>
+<div id="training-of-the-models-v2" class="section level2">
+<h2>Training of the models (v2)</h2>
+<div id="logistic-regression-v2" class="section level3">
+<h3>Logistic Regression (v2)</h3>
+</div>
+<div id="random-forest-v2" class="section level3">
+<h3>Random Forest (v2)</h3>
+</div>
+</div>
+<div id="evaluation-and-interpretation-v2" class="section level2">
+<h2>Evaluation and Interpretation (v2)</h2>
+<div id="confusion-matrix-and-auc-score-v2" class="section level3">
+<h3>Confusion Matrix and AUC Score (v2)</h3>
+<div id="logistic-regression-results-v2" class="section level4">
+<h4>Logistic Regression Results (v2)</h4>
+<table>
+<caption>Logistic Regression (v2) Performance Metrics</caption>
+<thead>
+<tr class="header">
+<th align="left">Metric</th>
+<th align="left">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Accuracy</td>
+<td align="left">85.29%</td>
+</tr>
+<tr class="even">
+<td align="left">Sensitivity</td>
+<td align="left">92.88%</td>
+</tr>
+<tr class="odd">
+<td align="left">Specificity</td>
+<td align="left">61.35%</td>
+</tr>
+<tr class="even">
+<td align="left">AUC</td>
+<td align="left">0.9062</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Confusion Matrix:</strong></p>
+<table>
+<caption>Logistic Regression (v2) - Confusion Matrix</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">L50K</th>
+<th align="right">G50K</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">L50K</td>
+<td align="right">6888</td>
+<td align="right">909</td>
+</tr>
+<tr class="even">
+<td align="left">G50K</td>
+<td align="right">528</td>
+<td align="right">1443</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="random-forest-results-v2" class="section level4">
+<h4>Random Forest Results (v2)</h4>
+<table>
+<caption>Random Forest (v2) Performance Metrics</caption>
+<thead>
+<tr class="header">
+<th align="left">Metric</th>
+<th align="left">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Accuracy</td>
+<td align="left">85.98%</td>
+</tr>
+<tr class="even">
+<td align="left">Sensitivity</td>
+<td align="left">93.47%</td>
+</tr>
+<tr class="odd">
+<td align="left">Specificity</td>
+<td align="left">62.37%</td>
+</tr>
+<tr class="even">
+<td align="left">AUC</td>
+<td align="left">0.9083</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Confusion Matrix:</strong></p>
+<table>
+<caption>Random Forest (v2) - Confusion Matrix</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">L50K</th>
+<th align="right">G50K</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">L50K</td>
+<td align="right">6932</td>
+<td align="right">885</td>
+</tr>
+<tr class="even">
+<td align="left">G50K</td>
+<td align="right">484</td>
+<td align="right">1467</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="feature-importance-v2" class="section level3">
+<h3>Feature Importance (v2)</h3>
+<table>
+<caption>Top 5 Most Important Variables (Random Forest v2)</caption>
+<thead>
+<tr class="header">
+<th align="left">Feature</th>
+<th align="right">Importance Score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">fnlwgt</td>
+<td align="right">1286.26</td>
+</tr>
+<tr class="even">
+<td align="left"><code>marital.statusMarried-civ-spouse</code></td>
+<td align="right">1075.18</td>
+</tr>
+<tr class="odd">
+<td align="left">capital.gain</td>
+<td align="right">982.11</td>
+</tr>
+<tr class="even">
+<td align="left">age</td>
+<td align="right">972.37</td>
+</tr>
+<tr class="odd">
+<td align="left">education.num</td>
+<td align="right">763.09</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="step-6-comparison-of-results" class="section level1">
+<h1>Step 6: Comparison of Results</h1>
+<p>Now let’s compare the performance of models trained on both data
+cleaning approaches:</p>
+<div id="performance-comparison-table" class="section level2">
+<h2>Performance Comparison Table</h2>
+<table>
+<caption>Model Performance Comparison: Simple vs Profiling-based Data
+Cleaning</caption>
+<colgroup>
+<col width="36%" />
+<col width="14%" />
+<col width="11%" />
+<col width="18%" />
+<col width="18%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Model</th>
+<th align="center">Accuracy</th>
+<th align="center">AUC</th>
+<th align="center">Sensitivity</th>
+<th align="center">Specificity</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Logistic Regression (v1)</td>
+<td align="center">84.57%</td>
+<td align="center">0.9019</td>
+<td align="center">93.08%</td>
+<td align="center">58.91%</td>
+</tr>
+<tr class="even">
+<td align="left">Random Forest (v1)</td>
+<td align="center">85.14%</td>
+<td align="center">0.8973</td>
+<td align="center">92.25%</td>
+<td align="center">63.7%</td>
+</tr>
+<tr class="odd">
+<td align="left">Logistic Regression (v2)</td>
+<td align="center">85.29%</td>
+<td align="center">0.9062</td>
+<td align="center">92.88%</td>
+<td align="center">61.35%</td>
+</tr>
+<tr class="even">
+<td align="left">Random Forest (v2)</td>
+<td align="center">85.98%</td>
+<td align="center">0.9083</td>
+<td align="center">93.47%</td>
+<td align="center">62.37%</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="key-findings" class="section level2">
+<h2>Key Findings</h2>
+<div id="data-cleaning-approaches-summary" class="section level3">
+<h3>Data Cleaning Approaches Summary</h3>
+<p><strong>Approach v1 (Simple):</strong></p>
+<ul>
+<li>Replaced workclass missing values with most common value
+(Private)</li>
+<li>Dropped rows with missing occupation values</li>
+<li>Replaced native.country missing values with most common value
+(United-States)</li>
+</ul>
+<p><strong>Approach v2 (Profiling-based):</strong></p>
+<ul>
+<li>Filled workclass based on age group and hours per week
+profiling</li>
+<li>Filled occupation based on marital status and sex profiling</li>
+<li>Replaced native.country missing values with United-States</li>
+</ul>
+</div>
+<div id="model-performance-analysis" class="section level3">
+<h3>Model Performance Analysis</h3>
+<p><strong>Best performing model with v1 data:</strong> Logistic
+Regression (AUC = 0.9019 )</p>
+<p><strong>Best performing model with v2 data:</strong> Random Forest
+(AUC = 0.9083 )</p>
+</div>
+<div id="conclusion" class="section level3">
+<h3>Conclusion</h3>
+<p>The difference in model performance between the two data cleaning
+approaches is minimal, with only a 0.64 % difference in AUC score.</p>
+<p><strong>Key Insights:</strong></p>
+<ul>
+<li>Both the simple approach (v1) and the profiling-based approach (v2)
+yield nearly identical results</li>
+<li>The sophisticated missing value imputation based on demographic
+patterns does not significantly improve model accuracy</li>
+<li>The information loss from the simpler approach (dropping rows and
+using mode imputation) appears to be negligible</li>
+</ul>
+<p><strong>Practical Recommendation:</strong></p>
+<p>Given the marginal performance difference, <strong>the simple
+approach (v1) is preferable</strong> for this dataset because:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Computational efficiency</strong>: Significantly faster data
+preparation and model training</li>
+<li><strong>Simplicity</strong>: Easier to implement and maintain in
+production environments</li>
+<li><strong>Cost-benefit</strong>: The minimal information loss does not
+justify the additional computational complexity</li>
+</ol>
+<p>This analysis demonstrates that, for this particular income
+prediction task, sophisticated data cleaning techniques do not provide
+substantial benefits over simpler approaches, making the trade-off in
+favor of computational efficiency worthwhile.</p>
 </div>
 </div>
 </div>
